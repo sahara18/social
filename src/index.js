@@ -6,6 +6,7 @@ import {app, BrowserWindow, ipcMain} from 'electron';
 import shortcut from 'electron-localshortcut';
 
 let mainWindow;
+let vkAuthUrl = 'https://oauth.vk.com/blank.html';
 
 function modal(options) {
   let win = new BrowserWindow({
@@ -17,13 +18,13 @@ function modal(options) {
   return win;
 }
 
-ipcMain.on('vk auth', e => {
+ipcMain.on('vk auth', ({sender}) => {
   let authUrl = url.format({
     pathname: 'https://oauth.vk.com/authorize',
     query: {
-      client_id: 5641670,
+      client_id: 5644624,
       display: 'page',
-      redirect_uri: 'https://oauth.vk.com/blank.html',
+      redirect_uri: vkAuthUrl,
       scope: 'wall,friends',
       response_type: 'token',
       v: 5.52
@@ -31,16 +32,15 @@ ipcMain.on('vk auth', e => {
   });
 
   let win = modal({
-    url: authUrl,
-    show: false
+    url: authUrl
   });
-
-  let sender = e.sender;
-  win.webContents.once('did-navigate', (evt, location) => {
-    let hash = url.parse(location).hash;
-    let accessToken = qs.parse(hash.slice(1)).access_token;
-    sender.send('vk auth', accessToken);
-    win.hide(); // win.close() ??
+  win.webContents.on('did-navigate', (e, location) => {
+    if (_.startsWith(location, vkAuthUrl)) {
+      let hash = url.parse(location).hash;
+      let accessToken = qs.parse(hash.slice(1)).access_token;
+      sender.send('vk auth', accessToken);
+      win.hide(); // win.close() ??
+    }
   });
 });
 
