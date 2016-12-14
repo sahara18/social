@@ -1,5 +1,4 @@
 import url from 'url';
-import axios from 'axios';
 import {push} from 'react-router-redux';
 import {ipcRenderer} from 'electron';
 import store from '@common/store';
@@ -7,11 +6,11 @@ import store from '@common/store';
 let vk = {
   setToken(token) {
     this.token = token;
-    store.dispatch(push('/feed'));
+    store.dispatch(push('/wall'));
   },
 
   auth() {
-    ipcRenderer.send('vk auth');
+    ipcRenderer.send('VK_GET_TOKEN');
   },
 
   async send(method, params = {}) {
@@ -24,12 +23,13 @@ let vk = {
       }
     });
 
-    let {data} = await axios.get(uri);
+    let resp = await fetch(uri);
+    let data = await resp.json();
     return data;
   }
 };
 
-ipcRenderer.on('vk auth', (e, accessToken) => {
+ipcRenderer.on('VK_SET_TOKEN', (e, accessToken) => {
   vk.setToken(accessToken);
 });
 

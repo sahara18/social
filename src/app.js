@@ -18,7 +18,7 @@ function modal(options) {
   return win;
 }
 
-ipcMain.on('vk auth', ({sender}) => {
+ipcMain.on('VK_GET_TOKEN', ({sender}) => {
   let authUrl = url.format({
     pathname: 'https://oauth.vk.com/authorize',
     query: {
@@ -34,18 +34,19 @@ ipcMain.on('vk auth', ({sender}) => {
   let win = modal({
     url: authUrl
   });
+
   win.webContents.on('did-navigate', (e, location) => {
     if (_.startsWith(location, vkAuthUrl)) {
       let hash = url.parse(location).hash;
       let accessToken = qs.parse(hash.slice(1)).access_token;
-      sender.send('vk auth', accessToken);
+      sender.send('VK_SET_TOKEN', accessToken);
       win.hide(); // win.close() ??
     }
   });
 });
 
 function createApp() {
-  mainWindow = new BrowserWindow({width: 800, height: 600});
+  mainWindow = new BrowserWindow();
   mainWindow.loadURL(`file://${path.resolve(__dirname, '..')}/index.html`);
   mainWindow.webContents.openDevTools();
 
